@@ -24,9 +24,10 @@ import (
 	"strconv"
 
 	"github.com/golang/glog"
+	"golang.org/x/net/context"
+
 	"github.com/yandex-cloud/k8s-csi-s3/pkg/mounter"
 	"github.com/yandex-cloud/k8s-csi-s3/pkg/s3"
-	"golang.org/x/net/context"
 
 	"github.com/container-storage-interface/spec/lib/go/csi"
 	"google.golang.org/grpc/codes"
@@ -69,6 +70,7 @@ func (ns *nodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublis
 	volumeID := req.GetVolumeId()
 	targetPath := req.GetTargetPath()
 	stagingTargetPath := req.GetStagingTargetPath()
+	glog.V(4).Infof("NodePublishVolume request: %v", req)
 
 	// Check arguments
 	if req.GetVolumeCapability() == nil {
@@ -158,6 +160,7 @@ func (ns *nodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStageVol
 	volumeID := req.GetVolumeId()
 	stagingTargetPath := req.GetStagingTargetPath()
 	bucketName, prefix := volumeIDToBucketPrefix(volumeID)
+	glog.V(4).Infof("NodeStageVolume request: %v", req)
 
 	// Check arguments
 	if len(volumeID) == 0 {
@@ -246,12 +249,17 @@ func (ns *nodeServer) NodeGetCapabilities(ctx context.Context, req *csi.NodeGetC
 }
 
 func (ns *nodeServer) NodeExpandVolume(ctx context.Context, req *csi.NodeExpandVolumeRequest) (*csi.NodeExpandVolumeResponse, error) {
-	return &csi.NodeExpandVolumeResponse{}, status.Error(codes.Unimplemented, "NodeExpandVolume is not implemented")
+	glog.V(4).Infof("s3: node expand volume request: %v", req)
+	return &csi.NodeExpandVolumeResponse{
+		CapacityBytes: req.GetCapacityRange().GetRequiredBytes(),
+	}, nil
 }
 
 func checkMount(targetPath string) (bool, error) {
+	glog.V(4).Infof("s3: Checking mount point %s", targetPath)
 	notMnt, err := mount.New("").IsLikelyNotMountPoint(targetPath)
 	if err != nil {
+		glog.Errorf("s3: Error checking mount point %s: %v", targetPath, err)
 		if os.IsNotExist(err) {
 			if err = os.MkdirAll(targetPath, 0750); err != nil && !os.IsExist(err) {
 				return false, err

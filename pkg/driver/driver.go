@@ -74,7 +74,11 @@ func (s3 *driver) Run() {
 	glog.Infof("Version: %v ", vendorVersion)
 	// Initialize default library driver
 
-	s3.driver.AddControllerServiceCapabilities([]csi.ControllerServiceCapability_RPC_Type{csi.ControllerServiceCapability_RPC_CREATE_DELETE_VOLUME})
+	s3.driver.AddControllerServiceCapabilities(
+		[]csi.ControllerServiceCapability_RPC_Type{
+			csi.ControllerServiceCapability_RPC_CREATE_DELETE_VOLUME,
+			csi.ControllerServiceCapability_RPC_EXPAND_VOLUME,
+		})
 	s3.driver.AddVolumeCapabilityAccessModes([]csi.VolumeCapability_AccessMode_Mode{csi.VolumeCapability_AccessMode_MULTI_NODE_MULTI_WRITER})
 
 	// Create GRPC servers

@@ -24,12 +24,13 @@ import (
 	"path"
 	"strings"
 
-	"github.com/yandex-cloud/k8s-csi-s3/pkg/mounter"
-	"github.com/yandex-cloud/k8s-csi-s3/pkg/s3"
 	"github.com/golang/glog"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"github.com/yandex-cloud/k8s-csi-s3/pkg/mounter"
+	"github.com/yandex-cloud/k8s-csi-s3/pkg/s3"
 
 	"github.com/container-storage-interface/spec/lib/go/csi"
 	csicommon "github.com/kubernetes-csi/drivers/pkg/csi-common"
@@ -192,7 +193,11 @@ func (cs *controllerServer) ValidateVolumeCapabilities(ctx context.Context, req 
 }
 
 func (cs *controllerServer) ControllerExpandVolume(ctx context.Context, req *csi.ControllerExpandVolumeRequest) (*csi.ControllerExpandVolumeResponse, error) {
-	return &csi.ControllerExpandVolumeResponse{}, status.Error(codes.Unimplemented, "ControllerExpandVolume is not implemented")
+	glog.V(4).Infof("Got a request to expand volume %s to %v bytes", req.VolumeId, req.CapacityRange.RequiredBytes)
+	return &csi.ControllerExpandVolumeResponse{
+		CapacityBytes:         req.CapacityRange.RequiredBytes,
+		NodeExpansionRequired: false,
+	}, nil
 }
 
 func sanitizeVolumeID(volumeID string) string {

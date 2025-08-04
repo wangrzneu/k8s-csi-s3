@@ -43,6 +43,10 @@ func (s3fs *s3fsMounter) Mount(target, volumeID string) error {
 	if s3fs.region != "" {
 		args = append(args, "-o", fmt.Sprintf("endpoint=%s", s3fs.region))
 	}
+	if s3fs.meta.CapacityBytes > 0 {
+		gb := convertBytesToGB(s3fs.meta.CapacityBytes)
+		args = append(args, "-o", fmt.Sprintf("bucket_size=%dGB", gb))
+	}
 	args = append(args, s3fs.meta.MountOptions...)
 	return fuseMount(target, s3fsCmd, args, nil)
 }
@@ -59,4 +63,12 @@ func writes3fsPass(pwFileContent string) error {
 	}
 	pwFile.Close()
 	return nil
+}
+
+func convertBytesToGB(bytes int64) int64 {
+	const bytesInGB = 1000 * 1000 * 1000
+	if bytes < 0 {
+		return 0
+	}
+	return bytes / bytesInGB
 }

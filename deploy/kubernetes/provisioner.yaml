@@ -87,6 +87,26 @@ spec:
           volumeMounts:
             - name: socket-dir
               mountPath: /var/lib/kubelet/plugins/ru.yandex.s3.csi
+        - name: csi-resizer
+          image: registry.k8s.io/sig-storage/csi-resizer:v1.3.0
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            privileged: true
+          args:
+            - "--csi-address=$(ADDRESS)"
+            - "--v=4"
+          env:
+            - name: TZ
+              value: Asia/Shanghai
+            - name: ADDRESS
+              value: /var/lib/kubelet/plugins/ru.yandex.s3.csi/csi.sock
+          resources:
+            requests:
+              cpu: 200m
+              memory: 256Mi
+          volumeMounts:
+            - name: socket-dir
+              mountPath: /var/lib/kubelet/plugins/ru.yandex.s3.csi
         - name: csi-s3
           image: cr.yandex/crp9ftr22d26age3hulg/csi-s3:0.43.0
           imagePullPolicy: IfNotPresent
